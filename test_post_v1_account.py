@@ -1,11 +1,11 @@
 import requests
-import json
+from json import loads
 
 
 def test_post_v1_account():
     """Регистрация и активация пользователя"""
     # Зарегистрировать пользователя
-    login = 'lenaivanova_1'
+    login = 'lenaivanova_5'
     email = f'{login}@mail.ru'
     password = '123456789'
 
@@ -18,6 +18,7 @@ def test_post_v1_account():
     response = requests.post('http://185.185.143.231:5051/v1/account', json=json_data)
     print(response.status_code)
     print(response.text)
+    assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
 
     # Получить письма из почтового сервера
     params = {
@@ -27,21 +28,25 @@ def test_post_v1_account():
     response = requests.get('http://185.185.143.231:5025/api/v2/messages', params=params, verify=False)
     print(response.status_code)
     print(response.text)
+    assert response.status_code == 200, "Письма не были получены."
 
     # Получить активационный токен из письма
-    ...
+    token = None
+    for item in response.json()["items"]:
+        user_data = loads(item['Content']['Body'])
+        user_login = user_data['Login']
+        if user_login == login:
+            token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+            break
+    assert token is not None, f"Токен для пользователя {login} не был получен."
 
     # Активировать пользователя
-    headers = {
-        'accept': 'text/plain',
-    }
-
-    response = requests.put('http://185.185.143.231:5051/v1/account/af8a660a-ff23-487f-8cb6-e6f6cf313002',
-                            headers=headers)
+    response = requests.put(f'http://185.185.143.231:5051/v1/account/{token}')
     print(response.status_code)
     print(response.text)
+    assert response.status_code == 200, "Пользователь не был активирован."
 
-    # Авторизоваться (проверка, что пользователь активирован)
+    # # Авторизоваться (проверка, что пользователь активирован)
     json_data = {
         'login': login,
         'password': password,
@@ -51,3 +56,4 @@ def test_post_v1_account():
     response = requests.post('http://185.185.143.231:5051/v1/account/login', json=json_data)
     print(response.status_code)
     print(response.text)
+    assert response.status_code == 200, "Пользователь не смог авторизоваться."
