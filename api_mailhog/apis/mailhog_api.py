@@ -17,7 +17,6 @@ class MailhogApi:
     ):
         """
         Get user emails
-        :param self:
         :param limit:
         :return:
         """
