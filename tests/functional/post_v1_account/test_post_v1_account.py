@@ -1,9 +1,10 @@
 from json import loads
-from xml.etree.ElementTree import indent
 
 from dm_api_account.apis.account_api import AccountApi
 from dm_api_account.apis.login_api import LoginApi
 from api_mailhog.apis.mailhog_api import MailhogApi
+from restclient.configuration import Configuration as MailhogConfiguration
+from restclient.configuration import Configuration as DmApiConfiguration
 import structlog
 
 structlog.configure(
@@ -18,12 +19,15 @@ structlog.configure(
 
 
 def test_post_v1_account():
-    account_api = AccountApi(host="http://185.185.143.231:5051")
-    login_api = LoginApi(host="http://185.185.143.231:5051")
-    mailhog_api = MailhogApi(host="http://185.185.143.231:5025")
+    mail_hog_configuration = MailhogConfiguration(host="http://185.185.143.231:5025")
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
+
+    account_api = AccountApi(configuration=dm_api_configuration)
+    login_api = LoginApi(configuration=dm_api_configuration)
+    mailhog_api = MailhogApi(configuration=mail_hog_configuration)
 
     # Зарегистрировать пользователя
-    login = 'lenaivanova_27'
+    login = 'lenaivanova_36'
     email = f'{login}@mail.ru'
     password = '123456789'
 
