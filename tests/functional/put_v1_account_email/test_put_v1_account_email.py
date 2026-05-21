@@ -19,13 +19,13 @@ structlog.configure(
 
 def test_put_v1_account_email():
     mail_hog_configuration = MailhogConfiguration(host="http://185.185.143.231:5025")
-    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=True)
     account = DMApiAccount(dm_api_configuration)
     mailhog = MailHog(mail_hog_configuration)
     account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog)
 
     # Зарегистрировать пользователя
-    login = 'lenaivanova_63'
+    login = 'lenaivanova_73'
     email = f'{login}@mail.ru'
     password = '123456789'
 
@@ -33,4 +33,6 @@ def test_put_v1_account_email():
     account_helper.user_login(login=login, password=password)
     new_email = f'{login}_new@mail.ru'
     account_helper.change_email(login=login, password=password, email=new_email)
+    account_helper.user_login_forbidden(login=login, password=password)
+    account_helper.activate_user_by_login(login=login)
     account_helper.user_login(login=login, password=password)

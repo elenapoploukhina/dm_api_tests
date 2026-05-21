@@ -19,12 +19,12 @@ structlog.configure(
 
 def test_put_v1_account_token():
     mail_hog_configuration = MailhogConfiguration(host="http://185.185.143.231:5025")
-    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=True)
     account = DMApiAccount(dm_api_configuration)
     mailhog = MailHog(mail_hog_configuration)
     account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog)
 
-    login = 'lenaivanova_62'
+    login = 'lenaivanova_72'
     email = f'{login}@mail.ru'
     password = '123456789'
 

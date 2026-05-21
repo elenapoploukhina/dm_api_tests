@@ -37,7 +37,7 @@ class AccountHelper:
         response = self.dm_api_account.account_api.post_v1_account(json_data=json_data)
         assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
         # Активировать пользователя
-        response = self._activate_user_by_login(login=login)
+        response = self.activate_user_by_login(login=login)
         return response
 
     def user_login(
@@ -62,6 +62,28 @@ class AccountHelper:
         assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
 
+    def user_login_forbidden(self,
+            login: str,
+            password: str,
+            remember_me: bool = True
+    ) -> Response:
+        """
+        Авторизоваться в системе, когда доступ запрещен.
+        :param login:
+        :param password:
+        :param remember_me:
+        :return:
+        """
+        json_data = {
+            'login': login,
+            'password': password,
+            'rememberMe': remember_me,
+        }
+        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
+        assert response.status_code == 403, "Попытка входа должна быть заблокирована."
+        return response
+
+
     def change_email(
             self,
             login: str,
@@ -69,7 +91,7 @@ class AccountHelper:
             email: str
     ) -> Response:
         """
-        Изменить email и активировать пользователя с новым email
+        Изменить email пользователя
         :param login:
         :param password:
         :param email:
@@ -84,24 +106,15 @@ class AccountHelper:
         response = self.dm_api_account.account_api.put_v1_account_email(json_data=json_data)
         assert response.status_code == 200, "Не получилось изменить пароль пользователя."
 
-        # Авторизоваться с ошибкой 403
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': True,
-        }
-        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 403, "Попытка входа должна быть заблокирована."
-
-        response = self._activate_user_by_login(login=login)
         return response
 
-    def _activate_user_by_login(
+
+    def activate_user_by_login(
             self,
             login: str
     ) -> Response:
         """
-        Активировать пользователя по его логину.
+        Активировать пользователя по его логину
         :param login:
         :return:
         """
