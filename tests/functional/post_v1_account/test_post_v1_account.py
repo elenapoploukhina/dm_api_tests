@@ -1,3 +1,4 @@
+import pytest
 import structlog
 
 from helpers.account_helper import AccountHelper
@@ -17,14 +18,33 @@ structlog.configure(
 )
 
 
-def test_post_v1_account():
+@pytest.fixture
+def mailhog_api():
     mail_hog_configuration = MailhogConfiguration(host="http://185.185.143.231:5025")
-    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=True)
-    account = DMApiAccount(dm_api_configuration)
     mailhog = MailHog(mail_hog_configuration)
-    account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog)
+    return mailhog
 
-    login = 'lenaivanova_90'
+
+@pytest.fixture
+def account_api():
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051")
+    account = DMApiAccount(dm_api_configuration)
+    return account
+
+
+@pytest.fixture
+def account_helper(
+        account_api,
+        mailhog_api
+):
+    account_helper = AccountHelper(dm_api_account=account_api, mailhog=mailhog_api)
+    return account_helper
+
+
+def test_post_v1_account(
+        account_helper
+        ):
+    login = 'lenaivanova_94'
     email = f'{login}@mail.ru'
     password = '123456789'
 
