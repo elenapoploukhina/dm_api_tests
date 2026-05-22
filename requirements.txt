@@ -8,5 +8,6 @@ pluggy==1.6.0
 Pygments==2.20.0
 pytest==9.0.3
 requests==2.34.0
+retrying==1.4.2
 structlog==25.5.0
 urllib3==2.7.0
