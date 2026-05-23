@@ -1,9 +1,9 @@
+import uuid
 from json import JSONDecodeError
 
-from requests import session
-import structlog
-import uuid
 import curlify
+import structlog
+from requests import session
 
 from restclient.configuration import Configuration
 
@@ -22,7 +22,7 @@ class RestClient:
     def set_headers(
             self,
             headers
-            ):
+    ):
         if headers:
             self.session.headers.update(headers)
 

@@ -161,7 +161,7 @@ class AccountHelper:
         :return:
         """
         # Получить активационный токен из письма
-        token = self._get_activation_token_by_login(login=login)
+        token = self._get_token_from_email(login=login)
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Активировать пользователя
@@ -170,7 +170,9 @@ class AccountHelper:
 
         return response
 
-    def get_user(self):
+    def get_user(
+            self
+    ):
         """
         Получить текущего авторизованного пользователя
         :return:
@@ -178,13 +180,52 @@ class AccountHelper:
         response = self.dm_api_account.account_api.get_v1_account()
         return response
 
+    def change_password(
+            self,
+            login: str,
+            email: str,
+            old_password: str,
+            new_password: str
+    ) -> Response:
+        """
+        Сбросить пароль для пользователя
+        :param login: логин пользователя
+        :param email: почта пользователя
+        :param old_password: старый пароль
+        :param new_password: новый пароль
+        :return:
+        """
+        # Сбросить пароль
+        reset_password_json_data = {
+            "login": login,
+            "email": email
+        }
+        response = self.dm_api_account.account_api.post_v1_account_password(reset_password_json_data)
+        assert response.status_code == 200, "Не получилось сбросить пароль."
+
+        # Получить токен для сброса пароля из подтверждающего письма
+        token = self._get_token_from_email(login=login)
+        assert token is not None, f"Токен для пользователя {login} не был получен."
+
+        # Поменять пароль на новый
+        change_password_json_data = {
+            "login": login,
+            "token": token,
+            "oldPassword": old_password,
+            "newPassword": new_password
+        }
+        response = self.dm_api_account.account_api.put_v1_account_password(change_password_json_data)
+        assert response.status_code == 200, "Не получилось изменить пароль."
+
+        return response
+
     @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
-    def _get_activation_token_by_login(
+    def _get_token_from_email(
             self,
             login: str
     ) -> str:
         """
-        Получить активационный токен для пользователя по его логину из списка писем
+        Получить токен для пользователя по его логину из списка писем
         :param login: логин пользователя
         :return: активационный токен
         """
@@ -196,6 +237,7 @@ class AccountHelper:
             user_data = loads(item['Content']['Body'])
             user_login = user_data['Login']
             if user_login == login:
-                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+                link_url = user_data.get('ConfirmationLinkUrl') or user_data.get('ConfirmationLinkUri')
+                token = link_url.split('/')[-1]
                 break
         return token
