@@ -18,6 +18,21 @@ class AccountApi(RestClient):
         )
         return response
 
+    def get_v1_account(
+            self,
+            **kwargs
+    ):
+        """
+        Get current user
+        :param kwargs:
+        :return:
+        """
+        response = self.get(
+            path='/v1/account',
+            **kwargs
+        )
+        return response
+
     def put_v1_account_token(
             self,
             token

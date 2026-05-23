@@ -14,33 +14,44 @@ structlog.configure(
     processors=[
         structlog.processors.JSONRenderer(
             indent=4,
-            ensure_ascii=True
-            # sort_keys=True
+            ensure_ascii=True,
+            sort_keys=True
         )
     ]
 )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mailhog_api():
     mail_hog_configuration = MailhogConfiguration(host="http://185.185.143.231:5025")
     mailhog = MailHog(mail_hog_configuration)
     return mailhog
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def account_api():
-    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=True)
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
     account = DMApiAccount(dm_api_configuration)
     return account
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def account_helper(
         account_api,
         mailhog_api
 ):
     account_helper = AccountHelper(dm_api_account=account_api, mailhog=mailhog_api)
+    return account_helper
+
+
+@pytest.fixture(scope="session")
+def auth_account_helper(
+        mailhog_api
+        ):
+    dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
+    account = DMApiAccount(dm_api_configuration)
+    account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog_api)
+    account_helper.auth_user(login="lenaivanova_1", password="123456789")
     return account_helper
 
 

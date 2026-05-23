@@ -10,18 +10,18 @@ from services.dm_api_account import DMApiAccount
 
 def retry_if_result_none(
         result
-        ):
+):
     """Return True if we should retry (in this case when result is None), False otherwise"""
     return result is None
 
 
 def retryer(
         function
-        ):
+):
     def wrapper(
             *args,
             **kwargs
-            ):
+    ):
         token = None
         count = 0
         while token is None:
@@ -45,6 +45,18 @@ class AccountHelper:
     ):
         self.dm_api_account = dm_api_account
         self.mailhog = mailhog
+
+    def auth_user(
+            self,
+            login: str,
+            password: str
+    ):
+        response = self.user_login(login=login, password=password)
+        token_header = {
+            "x-dm-auth-token": response.headers["x-dm-auth-token"]
+        }
+        self.dm_api_account.account_api.set_headers(token_header)
+        self.dm_api_account.login_api.set_headers(token_header)
 
     def register_new_user(
             self,
@@ -98,7 +110,7 @@ class AccountHelper:
             login: str,
             password: str,
             remember_me: bool = True
-            ) -> Response:
+    ) -> Response:
         """
         Авторизоваться в системе, когда доступ запрещен.
         :param login:
@@ -156,6 +168,14 @@ class AccountHelper:
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
         assert response.status_code == 200, "Пользователь не был активирован."
 
+        return response
+
+    def get_user(self):
+        """
+        Получить текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.get_v1_account()
         return response
 
     @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
