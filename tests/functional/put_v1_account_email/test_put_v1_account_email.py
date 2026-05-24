@@ -1,4 +1,7 @@
-def test_put_v1_account_email(account_helper, prepare_user):
+def test_put_v1_account_email(
+        account_helper,
+        prepare_user
+        ):
     login = prepare_user.login
     email = prepare_user.email
     password = prepare_user.password
@@ -8,5 +11,5 @@ def test_put_v1_account_email(account_helper, prepare_user):
     new_email = f'{login}_new@mail.ru'
     account_helper.change_email(login=login, password=password, email=new_email)
     account_helper.user_login_forbidden(login=login, password=password)
-    account_helper.activate_user_by_login(login=login)
+    account_helper.confirm_email_change(login=login)
     account_helper.user_login(login=login, password=password)

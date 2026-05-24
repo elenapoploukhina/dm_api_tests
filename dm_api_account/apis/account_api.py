@@ -62,7 +62,10 @@ class AccountApi(RestClient):
         )
         return response
 
-    def post_v1_account_password(self, json_data):
+    def post_v1_account_password(
+            self,
+            json_data
+    ):
         """
         Reset registered user password
         :param json_data:
@@ -74,14 +77,20 @@ class AccountApi(RestClient):
         )
         return response
 
-    def put_v1_account_password(self, json_data):
+    def put_v1_account_password(
+            self,
+            json_data,
+            headers
+    ):
         """
         Change registered user password
         :param json_data:
+        :param headers:
         :return:
         """
         response = self.put(
             path='/v1/account/password',
-            json=json_data
+            json=json_data,
+            headers=headers
         )
         return response
