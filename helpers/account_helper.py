@@ -61,6 +61,12 @@ class AccountHelper:
             login: str,
             password: str
     ):
+        """
+        Авторизовать классы-клиенты
+        :param login:
+        :param password:
+        :return:
+        """
         response = self.user_login(login=login, password=password)
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
@@ -205,7 +211,7 @@ class AccountHelper:
             new_password: str
     ) -> Response:
         """
-        Сбросить пароль для пользователя
+        Изменить пароль для пользователя
         :param login: логин пользователя
         :param email: почта пользователя
         :param old_password: старый пароль
@@ -242,6 +248,26 @@ class AccountHelper:
         )
         assert response.status_code == 200, "Не получилось изменить пароль."
 
+        return response
+
+    def logout_user(
+            self
+    ):
+        """
+        Завершить сессию текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.delete_v1_account_login()
+        return response
+
+    def logout_user_from_all_devices(
+            self
+    ):
+        """
+        Завершить все сессии текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.delete_v1_account_login_all()
         return response
 
     @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
