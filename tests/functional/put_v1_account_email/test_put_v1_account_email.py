@@ -25,14 +25,16 @@ def test_put_v1_account_email():
     account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog)
 
     # Зарегистрировать пользователя
-    login = 'lenaivanova_93'
+    login = 'lenaivanova_123'
     email = f'{login}@mail.ru'
     password = '123456789'
 
     account_helper.register_new_user(login=login, password=password, email=email)
-    account_helper.user_login(login=login, password=password)
+    response = account_helper.user_login(login=login, password=password)
+    assert response.status_code == 200, "Пользователь не смог авторизоваться."
     new_email = f'{login}_new@mail.ru'
     account_helper.change_email(login=login, password=password, email=new_email)
-    account_helper.user_login_forbidden(login=login, password=password)
+    response = account_helper.user_login(login=login, password=password)
+    assert response.status_code == 403, "Попытка входа должна быть заблокирована."
     account_helper.activate_user_by_login(login=login)
     account_helper.user_login(login=login, password=password)

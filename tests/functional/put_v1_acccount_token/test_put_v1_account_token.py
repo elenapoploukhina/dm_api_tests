@@ -24,9 +24,10 @@ def test_put_v1_account_token():
     mailhog = MailHog(mail_hog_configuration)
     account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog)
 
-    login = 'lenaivanova_92'
+    login = 'lenaivanova_122'
     email = f'{login}@mail.ru'
     password = '123456789'
 
     account_helper.register_new_user(login=login, password=password, email=email)
-    account_helper.user_login(login=login, password=password)
+    response = account_helper.user_login(login=login, password=password)
+    assert response.status_code == 200, "Пользователь не смог авторизоваться."
