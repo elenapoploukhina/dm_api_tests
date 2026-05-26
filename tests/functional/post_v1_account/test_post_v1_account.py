@@ -6,4 +6,5 @@ def test_post_v1_account(
     email = prepare_user.email
     password = prepare_user.password
     account_helper.register_new_user(login=login, password=password, email=email)
-    account_helper.user_login(login=login, password=password)
+    response = account_helper.user_login(login=login, password=password)
+    assert response.status_code == 200, "Пользователь не смог авторизоваться."

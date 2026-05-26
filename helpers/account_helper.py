@@ -125,29 +125,6 @@ class AccountHelper:
             'rememberMe': remember_me,
         }
         response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 200, "Пользователь не смог авторизоваться."
-        return response
-
-    def user_login_forbidden(
-            self,
-            login: str,
-            password: str,
-            remember_me: bool = True
-    ) -> Response:
-        """
-        Авторизоваться в системе, когда доступ запрещен.
-        :param login:
-        :param password:
-        :param remember_me:
-        :return:
-        """
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': remember_me,
-        }
-        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 403, "Попытка входа должна быть заблокирована."
         return response
 
     def change_email(
