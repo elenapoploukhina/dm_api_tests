@@ -1,4 +1,8 @@
 import time
+from enum import (
+    Enum,
+    auto,
+)
 from json import loads
 
 from requests import Response
@@ -37,6 +41,12 @@ def retryer(
     return wrapper
 
 
+class EmailType(Enum):
+    USER_REGISTRATION = auto()
+    PASSWORD_RESET = auto()
+    EMAIL_CHANGE = auto()
+
+
 class AccountHelper:
     def __init__(
             self,
@@ -45,6 +55,24 @@ class AccountHelper:
     ):
         self.dm_api_account = dm_api_account
         self.mailhog = mailhog
+
+    def auth_client(
+            self,
+            login: str,
+            password: str
+    ):
+        """
+        Авторизовать классы-клиенты
+        :param login:
+        :param password:
+        :return:
+        """
+        response = self.user_login(login=login, password=password)
+        token_header = {
+            "x-dm-auth-token": response.headers["x-dm-auth-token"]
+        }
+        self.dm_api_account.account_api.set_headers(token_header)
+        self.dm_api_account.login_api.set_headers(token_header)
 
     def register_new_user(
             self,
@@ -67,8 +95,15 @@ class AccountHelper:
         }
         response = self.dm_api_account.account_api.post_v1_account(json_data=json_data)
         assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
+
+        # Получить активационный токен из письма
+        token = self._get_token_from_email(login=login, email_type=EmailType.USER_REGISTRATION)
+        assert token is not None, f"Токен для пользователя {login} не был получен."
+
         # Активировать пользователя
-        response = self.activate_user_by_login(login=login)
+        response = self.dm_api_account.account_api.put_v1_account_token(token=token)
+        assert response.status_code == 200, "Пользователь не был активирован."
+
         return response
 
     def user_login(
@@ -116,43 +151,132 @@ class AccountHelper:
 
         return response
 
-    def activate_user_by_login(
+    def confirm_email_change(
             self,
             login: str
     ) -> Response:
         """
-        Активировать пользователя по его логину
+        Подтвердить смену email пользователя при помощи активационного токена
         :param login:
         :return:
         """
         # Получить активационный токен из письма
-        token = self._get_activation_token_by_login(login=login)
+        token = self._get_token_from_email(login=login, email_type=EmailType.EMAIL_CHANGE)
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
-        # Активировать пользователя
+        # Активировать пользователя с новым email
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, "Пользователь не был активирован."
+        assert response.status_code == 200, "Пользователь не был активирован после смены email."
 
         return response
 
-    @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
-    def _get_activation_token_by_login(
+    def get_user(
+            self
+    ):
+        """
+        Получить текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.get_v1_account()
+        return response
+
+    def change_password(
             self,
-            login: str
+            login: str,
+            email: str,
+            old_password: str,
+            new_password: str
+    ) -> Response:
+        """
+        Изменить пароль для пользователя
+        :param login: логин пользователя
+        :param email: почта пользователя
+        :param old_password: старый пароль
+        :param new_password: новый пароль
+        :return:
+        """
+        # Получить токен авторизации и сформировать header авторизации
+        response = self.user_login(login=login, password=old_password)
+        token_header = {
+            "x-dm-auth-token": response.headers["x-dm-auth-token"]
+        }
+
+        # Сбросить пароль
+        reset_password_json_data = {
+            "login": login,
+            "email": email
+        }
+        response = self.dm_api_account.account_api.post_v1_account_password(json_data=reset_password_json_data)
+        assert response.status_code == 200, "Не получилось сбросить пароль."
+
+        # Получить токен для сброса пароля из подтверждающего письма
+        token = self._get_token_from_email(login=login, email_type=EmailType.PASSWORD_RESET)
+        assert token is not None, f"Токен для пользователя {login} не был получен."
+
+        # Поменять пароль на новый
+        change_password_json_data = {
+            "login": login,
+            "token": token,
+            "oldPassword": old_password,
+            "newPassword": new_password
+        }
+        response = self.dm_api_account.account_api.put_v1_account_password(
+            json_data=change_password_json_data, headers=token_header
+        )
+        assert response.status_code == 200, "Не получилось изменить пароль."
+
+        return response
+
+    def logout_user(
+            self
+    ):
+        """
+        Завершить сессию текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.delete_v1_account_login()
+        return response
+
+    def logout_user_from_all_devices(
+            self
+    ):
+        """
+        Завершить все сессии текущего авторизованного пользователя
+        :return:
+        """
+        response = self.dm_api_account.account_api.delete_v1_account_login_all()
+        return response
+
+    @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
+    def _get_token_from_email(
+            self,
+            login: str,
+            email_type: EmailType
     ) -> str:
         """
-        Получить активационный токен для пользователя по его логину из списка писем
+        Получить токен для пользователя по его логину из списка писем
         :param login: логин пользователя
+        :param email_type: тип письма для извлечения токена
         :return: активационный токен
         """
         token = None
         # Получить письма из почтового сервера
         response = self.mailhog.mailhog_api.get_api_v2_messages()
+        match email_type:
+            case EmailType.USER_REGISTRATION | EmailType.EMAIL_CHANGE:
+                link_key = 'ConfirmationLinkUrl'
+            case EmailType.PASSWORD_RESET:
+                link_key = 'ConfirmationLinkUri'
+            case _:
+                raise ValueError('Неподдерживаемый тип письма.')
 
         for item in response.json()["items"]:
             user_data = loads(item['Content']['Body'])
             user_login = user_data['Login']
-            if user_login == login:
-                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+            if user_login != login:
+                continue
+            link_url = user_data.get(link_key)
+            if link_url:
+                token = link_url.split('/')[-1]
                 break
         return token
