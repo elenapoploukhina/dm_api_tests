@@ -4,6 +4,10 @@ from collections import namedtuple
 import pytest
 import structlog
 
+from data.constants import (
+    AUTH_CLIENT_USER_LOGIN,
+    AUTH_CLIENT_USER_PASSWORD,
+)
 from helpers.account_helper import AccountHelper
 from restclient.configuration import Configuration as DmApiConfiguration
 from restclient.configuration import Configuration as MailhogConfiguration
@@ -47,11 +51,11 @@ def account_helper(
 @pytest.fixture(scope="session")
 def auth_account_helper(
         mailhog_api
-        ):
+):
     dm_api_configuration = DmApiConfiguration(host="http://185.185.143.231:5051", disable_log=False)
     account = DMApiAccount(dm_api_configuration)
     account_helper = AccountHelper(dm_api_account=account, mailhog=mailhog_api)
-    account_helper.auth_client(login="lenaivanova_1", password="123456789")
+    account_helper.auth_client(login=AUTH_CLIENT_USER_LOGIN, password=AUTH_CLIENT_USER_PASSWORD)
     return account_helper
 
 

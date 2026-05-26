@@ -14,4 +14,5 @@ def test_put_v1_account_email(
     response = account_helper.user_login(login=login, password=password)
     assert response.status_code == 403, "Попытка входа должна быть заблокирована."
     account_helper.confirm_email_change(login=login)
-    account_helper.user_login(login=login, password=password)
+    response = account_helper.user_login(login=login, password=password)
+    assert response.status_code == 200, "Пользователь не смог авторизоваться."
