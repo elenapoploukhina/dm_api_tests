@@ -68,6 +68,8 @@ class AccountHelper:
         :return:
         """
         response = self.user_login(login=login, password=password)
+        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
         }
@@ -96,8 +98,11 @@ class AccountHelper:
         response = self.dm_api_account.account_api.post_v1_account(json_data=json_data)
         assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
 
+        start_time = time.time()
         # Получить активационный токен из письма
         token = self._get_token_from_email(login=login, email_type=EmailType.USER_REGISTRATION)
+        end_time = time.time()
+        assert end_time - start_time < 3, "Время ожидания активации превышено"
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Активировать пользователя
@@ -197,6 +202,8 @@ class AccountHelper:
         """
         # Получить токен авторизации и сформировать header авторизации
         response = self.user_login(login=login, password=old_password)
+        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
         }

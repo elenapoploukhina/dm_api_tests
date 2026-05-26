@@ -6,3 +6,4 @@ def test_post_v1_account_login(account_helper, prepare_user):
     account_helper.register_new_user(login=login, password=password, email=email)
     response = account_helper.user_login(login=login, password=password)
     assert response.status_code == 200, "Пользователь не смог авторизоваться."
+    assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
