@@ -1,9 +1,40 @@
+import time
 from json import loads
 
 from requests import Response
+from retrying import retry
 
 from services.api_mailhog import MailHog
 from services.dm_api_account import DMApiAccount
+
+
+def retry_if_result_none(
+        result
+):
+    """Return True if we should retry (in this case when result is None), False otherwise"""
+    return result is None
+
+
+def retryer(
+        function
+):
+    def wrapper(
+            *args,
+            **kwargs
+    ):
+        token = None
+        count = 0
+        while token is None:
+            token = function(*args, **kwargs)
+            count += 1
+            print(f'Попытка получения токена номер {count}')
+            if token:
+                return token
+            if count == 5:
+                raise AssertionError("Превышено количество попыток получения активационного токена.")
+            time.sleep(1)
+
+    return wrapper
 
 
 class AccountHelper:
@@ -59,30 +90,7 @@ class AccountHelper:
             'rememberMe': remember_me,
         }
         response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
-
-    def user_login_forbidden(self,
-            login: str,
-            password: str,
-            remember_me: bool = True
-    ) -> Response:
-        """
-        Авторизоваться в системе, когда доступ запрещен.
-        :param login:
-        :param password:
-        :param remember_me:
-        :return:
-        """
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': remember_me,
-        }
-        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 403, "Попытка входа должна быть заблокирована."
-        return response
-
 
     def change_email(
             self,
@@ -108,7 +116,6 @@ class AccountHelper:
 
         return response
 
-
     def activate_user_by_login(
             self,
             login: str
@@ -118,12 +125,8 @@ class AccountHelper:
         :param login:
         :return:
         """
-        # Получить письма из почтового сервера
-        response = self.mailhog.mailhog_api.get_api_v2_messages()
-        assert response.status_code == 200, "Письма не были получены."
-
         # Получить активационный токен из письма
-        token = self._get_activation_token_by_login(login=login, response=response)
+        token = self._get_activation_token_by_login(login=login)
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Активировать пользователя
@@ -132,18 +135,20 @@ class AccountHelper:
 
         return response
 
-    @staticmethod
+    @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
     def _get_activation_token_by_login(
-            login: str,
-            response: Response
+            self,
+            login: str
     ) -> str:
         """
         Получить активационный токен для пользователя по его логину из списка писем
         :param login: логин пользователя
-        :param response: ответ на запрос списка писем
         :return: активационный токен
         """
         token = None
+        # Получить письма из почтового сервера
+        response = self.mailhog.mailhog_api.get_api_v2_messages()
+
         for item in response.json()["items"]:
             user_data = loads(item['Content']['Body'])
             user_login = user_data['Login']
