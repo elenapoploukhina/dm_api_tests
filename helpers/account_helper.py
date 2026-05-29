@@ -8,6 +8,8 @@ from json import loads
 from requests import Response
 from retrying import retry
 
+from dm_api_account.models.login_credentials import LoginCredentials
+from dm_api_account.models.registration import Registration
 from services.api_mailhog import MailHog
 from services.dm_api_account import DMApiAccount
 
@@ -90,12 +92,8 @@ class AccountHelper:
         :return:
         """
         # Зарегистрировать пользователя
-        json_data = {
-            'login': login,
-            'email': email,
-            'password': password,
-        }
-        response = self.dm_api_account.account_api.post_v1_account(json_data=json_data)
+        registration = Registration(login=login, password=password, email=email)
+        response = self.dm_api_account.account_api.post_v1_account(registration=registration)
         assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
 
         start_time = time.time()
@@ -124,12 +122,8 @@ class AccountHelper:
         :param remember_me:
         :return:
         """
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': remember_me,
-        }
-        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
+        login_credentials=LoginCredentials(login=login, password=password, remember_me=remember_me)
+        response = self.dm_api_account.login_api.post_v1_account_login(login_credentials=login_credentials)
         return response
 
     def change_email(

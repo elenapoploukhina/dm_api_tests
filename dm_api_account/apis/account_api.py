@@ -1,3 +1,4 @@
+from dm_api_account.models.registration import Registration
 from restclient.client import RestClient
 
 
@@ -5,16 +6,16 @@ class AccountApi(RestClient):
 
     def post_v1_account(
             self,
-            json_data
+            registration: Registration
     ):
         """
         Register new user
-        :param json_data:
+        :param registration:
         :return:
         """
         response = self.post(
             path='/v1/account',
-            json=json_data
+            json=registration.model_dump(exclude_none=True, by_alias=True)
         )
         return response
 
@@ -95,7 +96,9 @@ class AccountApi(RestClient):
         )
         return response
 
-    def delete_v1_account_login(self):
+    def delete_v1_account_login(
+            self
+            ):
         """
         Logout as current user
         :return:
@@ -105,7 +108,9 @@ class AccountApi(RestClient):
         )
         return response
 
-    def delete_v1_account_login_all(self):
+    def delete_v1_account_login_all(
+            self
+            ):
         """
         Logout from every device
         :return:
