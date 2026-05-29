@@ -9,8 +9,10 @@ from requests import Response
 from retrying import retry
 
 from dm_api_account.models.change_email import ChangeEmail
+from dm_api_account.models.change_password import ChangePassword
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
+from dm_api_account.models.reset_password import ResetPassword
 from services.api_mailhog import MailHog
 from services.dm_api_account import DMApiAccount
 
@@ -190,7 +192,7 @@ class AccountHelper:
             email: str,
             old_password: str,
             new_password: str
-    ) -> Response:
+    ):
         """
         Изменить пароль для пользователя
         :param login: логин пользователя
@@ -208,11 +210,8 @@ class AccountHelper:
         }
 
         # Сбросить пароль
-        reset_password_json_data = {
-            "login": login,
-            "email": email
-        }
-        response = self.dm_api_account.account_api.post_v1_account_password(json_data=reset_password_json_data)
+        reset_password = ResetPassword(login=login, email=email)
+        response = self.dm_api_account.account_api.post_v1_account_password(reset_password=reset_password)
         assert response.status_code == 200, "Не получилось сбросить пароль."
 
         # Получить токен для сброса пароля из подтверждающего письма
@@ -220,16 +219,12 @@ class AccountHelper:
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Поменять пароль на новый
-        change_password_json_data = {
-            "login": login,
-            "token": token,
-            "oldPassword": old_password,
-            "newPassword": new_password
-        }
+        change_password = ChangePassword(login=login, token=token, old_password=old_password, new_password=new_password)
         response = self.dm_api_account.account_api.put_v1_account_password(
-            json_data=change_password_json_data, headers=token_header
+            change_password=change_password, headers=token_header
         )
-        assert response.status_code == 200, "Не получилось изменить пароль."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Не получилось изменить пароль."
 
         return response
 
