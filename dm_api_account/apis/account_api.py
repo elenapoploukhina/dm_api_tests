@@ -1,5 +1,6 @@
 from requests import Response
 
+from dm_api_account.models.change_email import ChangeEmail
 from dm_api_account.models.registration import Registration
 from dm_api_account.models.user_details_envelope import UserDetailsEnvelope
 from dm_api_account.models.user_envelope import UserEnvelope
@@ -62,17 +63,21 @@ class AccountApi(RestClient):
 
     def put_v1_account_email(
             self,
-            json_data
-    ):
+            change_email: ChangeEmail,
+            validate_response: bool = True
+    ) -> UserEnvelope | Response:
         """
         Change registered user email
-        :param json_data:
+        :param change_email:
+        :param validate_response:
         :return:
         """
         response = self.put(
             path='/v1/account/email',
-            json=json_data
+            json=change_email.model_dump(exclude_none=True, by_alias=True)
         )
+        if validate_response:
+            return UserEnvelope(**response.json())
         return response
 
     def post_v1_account_password(

@@ -8,6 +8,7 @@ from json import loads
 from requests import Response
 from retrying import retry
 
+from dm_api_account.models.change_email import ChangeEmail
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
 from services.api_mailhog import MailHog
@@ -116,7 +117,7 @@ class AccountHelper:
             password: str,
             remember_me: bool = True,
             validate_response: bool = False
-    ) -> Response:
+    ):
         """
         Авторизоваться в системе
         :param login:
@@ -136,7 +137,7 @@ class AccountHelper:
             login: str,
             password: str,
             email: str
-    ) -> Response:
+    ):
         """
         Изменить email пользователя
         :param login:
@@ -144,21 +145,17 @@ class AccountHelper:
         :param email:
         :return:
         """
-        # Изменить email
-        json_data = {
-            'login': login,
-            'password': password,
-            'email': email,
-        }
-        response = self.dm_api_account.account_api.put_v1_account_email(json_data=json_data)
-        assert response.status_code == 200, "Не получилось изменить пароль пользователя."
+        change_email = ChangeEmail(login=login, password=password, email=email)
+        response = self.dm_api_account.account_api.put_v1_account_email(change_email=change_email)
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Не получилось изменить пароль пользователя."
 
         return response
 
     def confirm_email_change(
             self,
             login: str
-    ) -> Response:
+    ):
         """
         Подтвердить смену email пользователя при помощи активационного токена
         :param login:
