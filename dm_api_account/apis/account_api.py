@@ -1,4 +1,7 @@
+from requests import Response
+
 from dm_api_account.models.registration import Registration
+from dm_api_account.models.user_envelope import UserEnvelope
 from restclient.client import RestClient
 
 
@@ -7,7 +10,7 @@ class AccountApi(RestClient):
     def post_v1_account(
             self,
             registration: Registration
-    ):
+    ) -> Response:
         """
         Register new user
         :param registration:
@@ -36,16 +39,20 @@ class AccountApi(RestClient):
 
     def put_v1_account_token(
             self,
-            token
-    ):
+            token,
+            validate_response: bool = True
+    ) -> UserEnvelope | Response:
         """
         Activate registered user
         :param token:
+        :param validate_response:
         :return:
         """
         response = self.put(
             path=f'/v1/account/{token}'
         )
+        if validate_response:
+            return UserEnvelope(**response.json())
         return response
 
     def put_v1_account_email(
@@ -98,7 +105,7 @@ class AccountApi(RestClient):
 
     def delete_v1_account_login(
             self
-            ):
+    ):
         """
         Logout as current user
         :return:
@@ -110,7 +117,7 @@ class AccountApi(RestClient):
 
     def delete_v1_account_login_all(
             self
-            ):
+    ):
         """
         Logout from every device
         :return:

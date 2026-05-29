@@ -69,9 +69,9 @@ class AccountHelper:
         :param password:
         :return:
         """
-        response = self.user_login(login=login, password=password)
-        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        response = self.user_login(login=login, password=password, )
         assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
+        assert response.status_code == 200, "Пользователь не смог авторизоваться."
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
         }
@@ -83,7 +83,7 @@ class AccountHelper:
             login: str,
             password: str,
             email: str
-    ) -> Response:
+    ):
         """
         Зарегистрировать и активировать нового пользователя
         :param login:
@@ -105,7 +105,8 @@ class AccountHelper:
 
         # Активировать пользователя
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, "Пользователь не был активирован."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Пользователь не был активирован."
 
         return response
 
@@ -113,17 +114,21 @@ class AccountHelper:
             self,
             login: str,
             password: str,
-            remember_me: bool = True
+            remember_me: bool = True,
+            validate_response: bool = False
     ) -> Response:
         """
         Авторизоваться в системе
         :param login:
         :param password:
         :param remember_me:
+        :param validate_response:
         :return:
         """
-        login_credentials=LoginCredentials(login=login, password=password, remember_me=remember_me)
-        response = self.dm_api_account.login_api.post_v1_account_login(login_credentials=login_credentials)
+        login_credentials = LoginCredentials(login=login, password=password, remember_me=remember_me)
+        response = self.dm_api_account.login_api.post_v1_account_login(
+            login_credentials=login_credentials, validate_response=validate_response
+        )
         return response
 
     def change_email(
@@ -165,7 +170,8 @@ class AccountHelper:
 
         # Активировать пользователя с новым email
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, "Пользователь не был активирован после смены email."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Пользователь не был активирован после смены email."
 
         return response
 
