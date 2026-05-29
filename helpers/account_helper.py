@@ -69,7 +69,7 @@ class AccountHelper:
         :param password:
         :return:
         """
-        response = self.user_login(login=login, password=password, )
+        response = self.user_login(login=login, password=password, validate_response=False)
         assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
         assert response.status_code == 200, "Пользователь не смог авторизоваться."
         token_header = {
@@ -176,13 +176,15 @@ class AccountHelper:
         return response
 
     def get_user(
-            self
+            self,
+            validate_response: bool = True
     ):
         """
         Получить текущего авторизованного пользователя
+        :param validate_response:
         :return:
         """
-        response = self.dm_api_account.account_api.get_v1_account()
+        response = self.dm_api_account.account_api.get_v1_account(validate_response=validate_response)
         return response
 
     def change_password(

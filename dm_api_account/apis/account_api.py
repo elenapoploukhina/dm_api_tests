@@ -1,6 +1,7 @@
 from requests import Response
 
 from dm_api_account.models.registration import Registration
+from dm_api_account.models.user_details_envelope import UserDetailsEnvelope
 from dm_api_account.models.user_envelope import UserEnvelope
 from restclient.client import RestClient
 
@@ -24,10 +25,12 @@ class AccountApi(RestClient):
 
     def get_v1_account(
             self,
+            validate_response: bool = True,
             **kwargs
-    ):
+    ) -> UserDetailsEnvelope | Response:
         """
         Get current user
+        :param validate_response:
         :param kwargs:
         :return:
         """
@@ -35,6 +38,8 @@ class AccountApi(RestClient):
             path='/v1/account',
             **kwargs
         )
+        if validate_response:
+            return UserDetailsEnvelope(**response.json())
         return response
 
     def put_v1_account_token(
@@ -105,7 +110,7 @@ class AccountApi(RestClient):
 
     def delete_v1_account_login(
             self
-    ):
+    ) -> Response:
         """
         Logout as current user
         :return:
@@ -117,7 +122,7 @@ class AccountApi(RestClient):
 
     def delete_v1_account_login_all(
             self
-    ):
+    ) -> Response:
         """
         Logout from every device
         :return:
