@@ -118,7 +118,8 @@ class AccountHelper:
             login: str,
             password: str,
             remember_me: bool = True,
-            validate_response: bool = False
+            validate_response: bool = False,
+            validate_headers: bool = False
     ):
         """
         Авторизоваться в системе
@@ -126,12 +127,16 @@ class AccountHelper:
         :param password:
         :param remember_me:
         :param validate_response:
+        :param validate_headers:
         :return:
         """
         login_credentials = LoginCredentials(login=login, password=password, remember_me=remember_me)
         response = self.dm_api_account.login_api.post_v1_account_login(
             login_credentials=login_credentials, validate_response=validate_response
         )
+        if validate_headers:
+            assert response.headers["x-dm-auth-token"], "Токен для пользователя не был получен"
+            assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
 
     def change_email(
