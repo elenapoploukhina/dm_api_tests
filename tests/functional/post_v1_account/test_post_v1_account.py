@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 from hamcrest import (
     assert_that,
     has_property,
@@ -10,6 +11,7 @@ from hamcrest import (
     equal_to,
 )
 
+from checkers.http_checkers import check_status_code_http
 from data.constants import LOGIN_START_PART
 
 
@@ -35,8 +37,27 @@ def test_post_v1_account(
                             "quantity": equal_to(0)
                         }
                     )
-                    )
                 )
+            )
         )
     )
     print(response)
+
+
+@pytest.mark.parametrize(
+    'login, email, password, expected_status_code, error_message', [
+        ('lenaivanova_31_05_2026_20', 'lenaivanova_31_05_2026_20@mail.ru', '63515', 400, 'Validation failed'),
+        ('lenaivanova_31_05_2026_21', 'lenamail.ru', '123456789', 400, 'Validation failed'),
+        ('l', 'lenaivanova_31_05_2026_22@mail.ru', '123456789', 400, 'Validation failed')
+    ]
+    )
+def test_post_v1_account_failed_validation(
+        account_helper,
+        login,
+        email,
+        password,
+        expected_status_code,
+        error_message
+):
+    with check_status_code_http(expected_status_code, error_message):
+        account_helper.register_new_user(login=login, password=password, email=email)
