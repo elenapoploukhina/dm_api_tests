@@ -11,6 +11,7 @@ from hamcrest import (
     instance_of,
 )
 
+from checkers.http_checkers import check_status_code_http
 from data.constants import LOGIN_START_PART
 from dm_api_account.models.user_details_envelope import ColorSchema
 from dm_api_account.models.user_envelope import UserRole
@@ -57,12 +58,10 @@ def test_get_v1_account_auth(
             )
         )
     )
-    # Пока убрали assert, потому что выполняем только валидацию модели ответа
-    # assert response.status_code == 200, "Пользователь не был получен."
 
 
 def test_get_v1_account_no_auth(
         account_helper
 ):
-    response = account_helper.get_user(validate_response=False)
-    assert response.status_code == 401, "Статус авторизации пользователя неожидаемый."
+    with check_status_code_http(401, "User must be authenticated"):
+        account_helper.get_user(validate_response=False)
