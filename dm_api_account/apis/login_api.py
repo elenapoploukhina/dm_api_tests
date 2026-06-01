@@ -25,3 +25,27 @@ class LoginApi(RestClient):
         if validate_response:
             return UserEnvelope(**response.json())
         return response
+
+    def delete_v1_account_login(
+            self
+    ) -> Response:
+        """
+        Logout as current user
+        :return:
+        """
+        response = self.delete(
+            path='/v1/account/login'
+        )
+        return response
+
+    def delete_v1_account_login_all(
+            self
+    ) -> Response:
+        """
+        Logout from every device
+        :return:
+        """
+        response = self.delete(
+            path='/v1/account/login/all'
+        )
+        return response

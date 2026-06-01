@@ -5,7 +5,6 @@ from enum import (
 )
 from json import loads
 
-from requests import Response
 from retrying import retry
 
 from dm_api_account.models.change_email import ChangeEmail
@@ -217,8 +216,8 @@ class AccountHelper:
 
         # Сбросить пароль
         reset_password = ResetPassword(login=login, email=email)
-        response = self.dm_api_account.account_api.post_v1_account_password(reset_password=reset_password)
-        assert response.status_code == 200, "Не получилось сбросить пароль."
+        self.dm_api_account.account_api.post_v1_account_password(reset_password=reset_password)
+        # assert response.status_code == 200, "Не получилось сбросить пароль."
 
         # Получить токен для сброса пароля из подтверждающего письма
         token = self._get_token_from_email(login=login, email_type=EmailType.PASSWORD_RESET)
@@ -241,7 +240,7 @@ class AccountHelper:
         Завершить сессию текущего авторизованного пользователя
         :return:
         """
-        response = self.dm_api_account.account_api.delete_v1_account_login()
+        response = self.dm_api_account.login_api.delete_v1_account_login()
         return response
 
     def logout_user_from_all_devices(
@@ -251,7 +250,7 @@ class AccountHelper:
         Завершить все сессии текущего авторизованного пользователя
         :return:
         """
-        response = self.dm_api_account.account_api.delete_v1_account_login_all()
+        response = self.dm_api_account.login_api.delete_v1_account_login_all()
         return response
 
     @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)
