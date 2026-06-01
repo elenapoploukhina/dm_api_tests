@@ -7,6 +7,7 @@ import structlog
 from data.constants import (
     AUTH_CLIENT_USER_LOGIN,
     AUTH_CLIENT_USER_PASSWORD,
+    LOGIN_START_PART,
 )
 from helpers.account_helper import AccountHelper
 from restclient.configuration import Configuration as DmApiConfiguration
@@ -63,7 +64,7 @@ def auth_account_helper(
 def prepare_user():
     now = datetime.datetime.now()
     now_str = now.strftime("%d_%m_%Y_%H_%M_%S_%f")
-    login = f'lenaivanova_{now_str}'
+    login = f'{LOGIN_START_PART}_{now_str}'
     email = f'{login}@mail.ru'
     password = '123456789'
     User = namedtuple('User', ['login', 'email', 'password'])
