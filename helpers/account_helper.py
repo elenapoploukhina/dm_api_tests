@@ -135,7 +135,8 @@ class AccountHelper:
         )
         if validate_headers:
             assert response.headers["x-dm-auth-token"], "Токен для пользователя не был получен"
-            assert response.status_code == 200, "Пользователь не смог авторизоваться."
+            # Проверка статус-кода здесь не нужна, т.к. в restclient мы вызываем raisefor status
+            # assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
 
     def change_email(
