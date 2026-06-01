@@ -44,7 +44,11 @@ class User(BaseModel):
     registration: datetime = Field(None)
 
 
+class Metadata(BaseModel):
+    email: str
+
+
 class UserEnvelope(BaseModel):
     model_config = ConfigDict(extra="forbid")
     resource: Optional[User] = None
-    metadata: Optional[str] = None
+    metadata: Optional[Metadata] = None
