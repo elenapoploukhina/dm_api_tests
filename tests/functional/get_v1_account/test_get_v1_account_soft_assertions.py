@@ -4,9 +4,6 @@ from assertpy import (
     assert_that,
     soft_assertions,
 )
-from hamcrest import (
-    assert_that,
-)
 
 from data.constants import (
     AUTH_CLIENT_USER_LOGIN,
