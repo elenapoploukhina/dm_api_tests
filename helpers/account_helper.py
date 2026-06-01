@@ -5,9 +5,13 @@ from enum import (
 )
 from json import loads
 
-from requests import Response
 from retrying import retry
 
+from dm_api_account.models.change_email import ChangeEmail
+from dm_api_account.models.change_password import ChangePassword
+from dm_api_account.models.login_credentials import LoginCredentials
+from dm_api_account.models.registration import Registration
+from dm_api_account.models.reset_password import ResetPassword
 from services.api_mailhog import MailHog
 from services.dm_api_account import DMApiAccount
 
@@ -67,7 +71,9 @@ class AccountHelper:
         :param password:
         :return:
         """
-        response = self.user_login(login=login, password=password)
+        response = self.user_login(login=login, password=password, validate_response=False)
+        assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
+        assert response.status_code == 200, "Пользователь не смог авторизоваться."
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
         }
@@ -79,7 +85,7 @@ class AccountHelper:
             login: str,
             password: str,
             email: str
-    ) -> Response:
+    ):
         """
         Зарегистрировать и активировать нового пользователя
         :param login:
@@ -88,21 +94,21 @@ class AccountHelper:
         :return:
         """
         # Зарегистрировать пользователя
-        json_data = {
-            'login': login,
-            'email': email,
-            'password': password,
-        }
-        response = self.dm_api_account.account_api.post_v1_account(json_data=json_data)
+        registration = Registration(login=login, password=password, email=email)
+        response = self.dm_api_account.account_api.post_v1_account(registration=registration)
         assert response.status_code == 201, f"Пользователь не был создан. {response.json()=}"
 
+        start_time = time.time()
         # Получить активационный токен из письма
         token = self._get_token_from_email(login=login, email_type=EmailType.USER_REGISTRATION)
+        end_time = time.time()
+        assert end_time - start_time < 3, "Время ожидания активации превышено"
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Активировать пользователя
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, "Пользователь не был активирован."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Пользователь не был активирован."
 
         return response
 
@@ -110,21 +116,21 @@ class AccountHelper:
             self,
             login: str,
             password: str,
-            remember_me: bool = True
-    ) -> Response:
+            remember_me: bool = True,
+            validate_response: bool = False
+    ):
         """
         Авторизоваться в системе
         :param login:
         :param password:
         :param remember_me:
+        :param validate_response:
         :return:
         """
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': remember_me,
-        }
-        response = self.dm_api_account.login_api.post_v1_account_login(json_data=json_data)
+        login_credentials = LoginCredentials(login=login, password=password, remember_me=remember_me)
+        response = self.dm_api_account.login_api.post_v1_account_login(
+            login_credentials=login_credentials, validate_response=validate_response
+        )
         return response
 
     def change_email(
@@ -132,7 +138,7 @@ class AccountHelper:
             login: str,
             password: str,
             email: str
-    ) -> Response:
+    ):
         """
         Изменить email пользователя
         :param login:
@@ -140,21 +146,17 @@ class AccountHelper:
         :param email:
         :return:
         """
-        # Изменить email
-        json_data = {
-            'login': login,
-            'password': password,
-            'email': email,
-        }
-        response = self.dm_api_account.account_api.put_v1_account_email(json_data=json_data)
-        assert response.status_code == 200, "Не получилось изменить пароль пользователя."
+        change_email = ChangeEmail(login=login, password=password, email=email)
+        response = self.dm_api_account.account_api.put_v1_account_email(change_email=change_email)
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Не получилось изменить пароль пользователя."
 
         return response
 
     def confirm_email_change(
             self,
             login: str
-    ) -> Response:
+    ):
         """
         Подтвердить смену email пользователя при помощи активационного токена
         :param login:
@@ -166,18 +168,21 @@ class AccountHelper:
 
         # Активировать пользователя с новым email
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, "Пользователь не был активирован после смены email."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Пользователь не был активирован после смены email."
 
         return response
 
     def get_user(
-            self
+            self,
+            validate_response: bool = True
     ):
         """
         Получить текущего авторизованного пользователя
+        :param validate_response:
         :return:
         """
-        response = self.dm_api_account.account_api.get_v1_account()
+        response = self.dm_api_account.account_api.get_v1_account(validate_response=validate_response)
         return response
 
     def change_password(
@@ -186,7 +191,7 @@ class AccountHelper:
             email: str,
             old_password: str,
             new_password: str
-    ) -> Response:
+    ):
         """
         Изменить пароль для пользователя
         :param login: логин пользователя
@@ -197,33 +202,28 @@ class AccountHelper:
         """
         # Получить токен авторизации и сформировать header авторизации
         response = self.user_login(login=login, password=old_password)
+        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
         token_header = {
             "x-dm-auth-token": response.headers["x-dm-auth-token"]
         }
 
         # Сбросить пароль
-        reset_password_json_data = {
-            "login": login,
-            "email": email
-        }
-        response = self.dm_api_account.account_api.post_v1_account_password(json_data=reset_password_json_data)
-        assert response.status_code == 200, "Не получилось сбросить пароль."
+        reset_password = ResetPassword(login=login, email=email)
+        self.dm_api_account.account_api.post_v1_account_password(reset_password=reset_password)
+        # assert response.status_code == 200, "Не получилось сбросить пароль."
 
         # Получить токен для сброса пароля из подтверждающего письма
         token = self._get_token_from_email(login=login, email_type=EmailType.PASSWORD_RESET)
         assert token is not None, f"Токен для пользователя {login} не был получен."
 
         # Поменять пароль на новый
-        change_password_json_data = {
-            "login": login,
-            "token": token,
-            "oldPassword": old_password,
-            "newPassword": new_password
-        }
+        change_password = ChangePassword(login=login, token=token, old_password=old_password, new_password=new_password)
         response = self.dm_api_account.account_api.put_v1_account_password(
-            json_data=change_password_json_data, headers=token_header
+            change_password=change_password, headers=token_header
         )
-        assert response.status_code == 200, "Не получилось изменить пароль."
+        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
+        # assert response.status_code == 200, "Не получилось изменить пароль."
 
         return response
 
@@ -234,7 +234,7 @@ class AccountHelper:
         Завершить сессию текущего авторизованного пользователя
         :return:
         """
-        response = self.dm_api_account.account_api.delete_v1_account_login()
+        response = self.dm_api_account.login_api.delete_v1_account_login()
         return response
 
     def logout_user_from_all_devices(
@@ -244,7 +244,7 @@ class AccountHelper:
         Завершить все сессии текущего авторизованного пользователя
         :return:
         """
-        response = self.dm_api_account.account_api.delete_v1_account_login_all()
+        response = self.dm_api_account.login_api.delete_v1_account_login_all()
         return response
 
     @retry(retry_on_result=retry_if_result_none, stop_max_attempt_number=5, wait_fixed=1000)

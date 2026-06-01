@@ -17,6 +17,6 @@ def restore_session_after_test(
 def test_delete_v1_account_login_all(
         auth_account_helper,
         restore_session_after_test
-        ):
+):
     response = auth_account_helper.logout_user_from_all_devices()
     assert response.status_code == 204, "Логаут пользователя со всех устройств не был осуществлен."

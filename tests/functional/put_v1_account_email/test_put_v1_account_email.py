@@ -1,7 +1,7 @@
 def test_put_v1_account_email(
         account_helper,
         prepare_user
-        ):
+):
     login = prepare_user.login
     email = prepare_user.email
     password = prepare_user.password

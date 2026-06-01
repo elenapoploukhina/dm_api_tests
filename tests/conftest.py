@@ -62,7 +62,7 @@ def auth_account_helper(
 @pytest.fixture
 def prepare_user():
     now = datetime.datetime.now()
-    now_str = now.strftime("%d_%m_%Y_%H_%M_%S")
+    now_str = now.strftime("%d_%m_%Y_%H_%M_%S_%f")
     login = f'lenaivanova_{now_str}'
     email = f'{login}@mail.ru'
     password = '123456789'
