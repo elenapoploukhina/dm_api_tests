@@ -84,17 +84,21 @@ class AccountApi(RestClient):
 
     def post_v1_account_password(
             self,
-            reset_password: ResetPassword
-    ) -> Response:
+            reset_password: ResetPassword,
+            validate_response: bool = True
+    ) -> UserEnvelope | Response:
         """
         Reset registered user password
         :param reset_password:
+        :param validate_response:
         :return:
         """
         response = self.post(
             path='/v1/account/password',
             json=reset_password.model_dump(exclude_none=True, by_alias=True)
         )
+        if validate_response:
+            return UserEnvelope(**response.json())
         return response
 
     def put_v1_account_password(
@@ -117,28 +121,4 @@ class AccountApi(RestClient):
         )
         if validate_response:
             return UserEnvelope(**response.json())
-        return response
-
-    def delete_v1_account_login(
-            self
-    ) -> Response:
-        """
-        Logout as current user
-        :return:
-        """
-        response = self.delete(
-            path='/v1/account/login'
-        )
-        return response
-
-    def delete_v1_account_login_all(
-            self
-    ) -> Response:
-        """
-        Logout from every device
-        :return:
-        """
-        response = self.delete(
-            path='/v1/account/login/all'
-        )
         return response
