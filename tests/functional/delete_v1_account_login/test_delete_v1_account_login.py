@@ -1,9 +1,5 @@
 import pytest
-
-from data.constants import (
-    AUTH_CLIENT_USER_LOGIN,
-    AUTH_CLIENT_USER_PASSWORD,
-)
+from vyper import v
 
 
 @pytest.fixture(scope="function")
@@ -11,7 +7,7 @@ def restore_session_after_test(
         auth_account_helper
 ):
     yield
-    auth_account_helper.auth_client(login=AUTH_CLIENT_USER_LOGIN, password=AUTH_CLIENT_USER_PASSWORD)
+    auth_account_helper.auth_client(login=v.get('user.login'), password=v.get('user.password'))
 
 
 def test_delete_v1_account_login(
