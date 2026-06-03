@@ -5,6 +5,7 @@ from enum import (
 )
 from json import loads
 
+import allure
 from retrying import retry
 
 from dm_api_account.models.change_email import ChangeEmail
@@ -80,6 +81,7 @@ class AccountHelper:
         self.dm_api_account.account_api.set_headers(token_header)
         self.dm_api_account.login_api.set_headers(token_header)
 
+    @allure.step("Регистрация и активация пользователя")
     def register_new_user(
             self,
             login: str,
@@ -112,6 +114,7 @@ class AccountHelper:
 
         return response
 
+    @allure.step("Авторизация пользователя")
     def user_login(
             self,
             login: str,
