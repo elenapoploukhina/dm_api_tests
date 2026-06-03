@@ -236,6 +236,7 @@ class AccountHelper:
 
         return response
 
+    @allure.step("Завершить сессию текущего авторизованного пользователя")
     def logout_user(
             self
     ):
@@ -246,6 +247,7 @@ class AccountHelper:
         response = self.dm_api_account.login_api.delete_v1_account_login()
         return response
 
+    @allure.step("Завершить все сессии текущего авторизованного пользователя")
     def logout_user_from_all_devices(
             self
     ):
