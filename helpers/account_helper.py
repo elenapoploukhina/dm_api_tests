@@ -197,7 +197,7 @@ class AccountHelper:
         response = self.dm_api_account.account_api.get_v1_account(validate_response=validate_response)
         return response
 
-    @allure.step("Изменить пароля пользователя")
+    @allure.step("Изменить пароль пользователя")
     def change_password(
             self,
             login: str,

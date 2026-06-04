@@ -20,7 +20,6 @@ def allure_attach(
                 attachment_type=allure.attachment_type.JSON
             )
         response = fn(*args, **kwargs)
-        print("Перешли сюда в allure_attach после строчки response = fn(*args, **kwargs)")
         curl = curlify.to_curl(response.request)
         allure.attach(curl, name="curl", attachment_type=allure.attachment_type.TEXT)
 
