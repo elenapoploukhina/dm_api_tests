@@ -8,7 +8,7 @@ from restclient.client import RestClient
 
 class LoginApi(RestClient):
 
-    @allure.step("Авторизоваться в системе")
+    # @allure.step("Авторизоваться в системе")
     def post_v1_account_login(
             self,
             login_credentials: LoginCredentials,

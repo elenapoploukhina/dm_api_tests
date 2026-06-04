@@ -2,6 +2,7 @@ import allure
 import pytest
 from vyper import v
 
+
 @allure.suite("Тесты для метода DELETE v1/account/login/all")
 @allure.sub_suite("Логаут пользователя со всех устройств")
 class TestDeleteV1AccountAll:

@@ -85,6 +85,7 @@ class AccountApi(RestClient):
             return UserEnvelope(**response.json())
         return response
 
+    @allure.step("Сбросить пароль пользователя")
     def post_v1_account_password(
             self,
             reset_password: ResetPassword,
@@ -104,6 +105,7 @@ class AccountApi(RestClient):
             return UserEnvelope(**response.json())
         return response
 
+    @allure.step("Установить новый пароль пользователя")
     def put_v1_account_password(
             self,
             change_password: ChangePassword,

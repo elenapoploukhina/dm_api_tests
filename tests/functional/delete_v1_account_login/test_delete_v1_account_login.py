@@ -3,7 +3,7 @@ import pytest
 from vyper import v
 
 
-@allure.suite("Тесты для метода c")
+@allure.suite("Тесты для метода DELETE v1/account/login")
 @allure.sub_suite("Логаут текущего авторизованного пользователя")
 class TestDeleteV1Account:
 

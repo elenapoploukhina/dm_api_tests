@@ -4,6 +4,7 @@ import pytest
 from checkers.http_checkers import check_status_code_http
 from checkers.post_v1_account import PostV1Account
 
+
 @allure.suite("Тесты для метода POST v1/account")
 @allure.sub_suite("Регистрация нового пользователя")
 class TestPostV1Account:
@@ -20,7 +21,6 @@ class TestPostV1Account:
         account_helper.register_new_user(login=login, password=password, email=email)
         response = account_helper.user_login(login=login, password=password, validate_response=True)
         PostV1Account.check_response_values(response)
-
 
     @allure.title("Регистрация нового пользователя c невалидными учетными данными")
     @pytest.mark.parametrize(

@@ -142,6 +142,7 @@ class AccountHelper:
             # assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
 
+    @allure.step("Изменить email пользователя")
     def change_email(
             self,
             login: str,
@@ -162,6 +163,7 @@ class AccountHelper:
 
         return response
 
+    @allure.step("Подтвердить изменение email пользователя")
     def confirm_email_change(
             self,
             login: str
@@ -182,18 +184,20 @@ class AccountHelper:
 
         return response
 
+    @allure.step("Получить информацию о пользователе")
     def get_user(
             self,
             validate_response: bool = True
     ):
         """
-        Получить текущего авторизованного пользователя
+        Получить информацию о пользователе
         :param validate_response:
         :return:
         """
         response = self.dm_api_account.account_api.get_v1_account(validate_response=validate_response)
         return response
 
+    @allure.step("Изменение пароля пользователя")
     def change_password(
             self,
             login: str,
