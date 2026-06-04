@@ -81,7 +81,7 @@ class AccountHelper:
         self.dm_api_account.account_api.set_headers(token_header)
         self.dm_api_account.login_api.set_headers(token_header)
 
-    @allure.step("Регистрация и активация пользователя")
+    @allure.step("Зарегистрировать и активировать пользователя")
     def register_new_user(
             self,
             login: str,
@@ -114,7 +114,7 @@ class AccountHelper:
 
         return response
 
-    @allure.step("Авторизация пользователя")
+    @allure.step("Авторизоваться в системе")
     def user_login(
             self,
             login: str,
@@ -197,7 +197,7 @@ class AccountHelper:
         response = self.dm_api_account.account_api.get_v1_account(validate_response=validate_response)
         return response
 
-    @allure.step("Изменение пароля пользователя")
+    @allure.step("Изменить пароля пользователя")
     def change_password(
             self,
             login: str,
