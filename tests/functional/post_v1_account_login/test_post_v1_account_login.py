@@ -17,5 +17,3 @@ class TestPostV1AccountLogin:
 
         account_helper.register_new_user(login=login, password=password, email=email)
         account_helper.user_login(login=login, password=password, validate_response=True)
-        # assert response.status_code == 200, "Пользователь не смог авторизоваться."
-        # assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"

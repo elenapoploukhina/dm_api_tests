@@ -109,8 +109,6 @@ class AccountHelper:
 
         # Активировать пользователя
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
-        # assert response.status_code == 200, "Пользователь не был активирован."
 
         return response
 
@@ -120,7 +118,7 @@ class AccountHelper:
             login: str,
             password: str,
             remember_me: bool = True,
-            validate_response: bool = False,
+            validate_response: bool = True,
             validate_headers: bool = False
     ):
         """
@@ -138,8 +136,6 @@ class AccountHelper:
         )
         if validate_headers:
             assert response.headers["x-dm-auth-token"], "Токен для пользователя не был получен"
-            # Проверка статус-кода здесь не нужна, т.к. в restclient мы вызываем raisefor status
-            # assert response.status_code == 200, "Пользователь не смог авторизоваться."
         return response
 
     @allure.step("Изменить email пользователя")
@@ -158,9 +154,6 @@ class AccountHelper:
         """
         change_email = ChangeEmail(login=login, password=password, email=email)
         response = self.dm_api_account.account_api.put_v1_account_email(change_email=change_email)
-        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
-        # assert response.status_code == 200, "Не получилось изменить пароль пользователя."
-
         return response
 
     @allure.step("Подтвердить изменение email пользователя")
@@ -179,9 +172,6 @@ class AccountHelper:
 
         # Активировать пользователя с новым email
         response = self.dm_api_account.account_api.put_v1_account_token(token=token)
-        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
-        # assert response.status_code == 200, "Пользователь не был активирован после смены email."
-
         return response
 
     @allure.step("Получить информацию о пользователе")
@@ -214,7 +204,7 @@ class AccountHelper:
         :return:
         """
         # Получить токен авторизации и сформировать header авторизации
-        response = self.user_login(login=login, password=old_password)
+        response = self.user_login(login=login, password=old_password, validate_response=False)
         assert response.status_code == 200, "Пользователь не смог авторизоваться."
         assert response.headers.get("x-dm-auth-token"), "Токен для пользователя не был получен"
         token_header = {
@@ -224,7 +214,6 @@ class AccountHelper:
         # Сбросить пароль
         reset_password = ResetPassword(login=login, email=email)
         self.dm_api_account.account_api.post_v1_account_password(reset_password=reset_password)
-        # assert response.status_code == 200, "Не получилось сбросить пароль."
 
         # Получить токен для сброса пароля из подтверждающего письма
         token = self._get_token_from_email(login=login, email_type=EmailType.PASSWORD_RESET)
@@ -235,9 +224,6 @@ class AccountHelper:
         response = self.dm_api_account.account_api.put_v1_account_password(
             change_password=change_password, headers=token_header
         )
-        # В предыдущем методе мы валидируем модель для ответа, поэтому статус код не проверяем
-        # assert response.status_code == 200, "Не получилось изменить пароль."
-
         return response
 
     @allure.step("Завершить сессию текущего авторизованного пользователя")

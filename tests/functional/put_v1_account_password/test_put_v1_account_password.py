@@ -16,9 +16,7 @@ class TestPutV1AccountPassword:
         email = prepare_user.email
 
         account_helper.register_new_user(login=login, password=password, email=email)
-        response = account_helper.user_login(login=login, password=password)
-        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        account_helper.user_login(login=login, password=password)
         new_password = "0987654321"
         account_helper.change_password(login=login, email=email, old_password=password, new_password=new_password)
-        response = account_helper.user_login(login=login, password=new_password)
-        assert response.status_code == 200, "Пользователь не смог авторизоваться."
+        account_helper.user_login(login=login, password=new_password)
