@@ -56,6 +56,15 @@ class RestClient:
         return self._send_request(method="DELETE", path=path, **kwargs)
 
     @allure_attach
+    def _request(
+            self,
+            method,
+            url,
+            **kwargs
+            ):
+        return self.session.request(method=method, url=url, **kwargs)
+
+
     def _send_request(
             self,
             method,
@@ -65,7 +74,7 @@ class RestClient:
         full_url = self.host + path
 
         if self.disable_log:
-            rest_response = self.session.request(method=method, url=full_url, **kwargs)
+            rest_response = self._request(method=method, url=full_url, **kwargs)
             rest_response.raise_for_status()
             return rest_response
 
@@ -80,7 +89,7 @@ class RestClient:
             json=kwargs.get('json')
         )
 
-        rest_response = self.session.request(method=method, url=full_url, **kwargs)
+        rest_response = self._request(method=method, url=full_url, **kwargs)
 
         curl = curlify.to_curl(rest_response.request)
         print(curl)
