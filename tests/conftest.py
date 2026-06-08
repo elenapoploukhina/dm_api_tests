@@ -12,7 +12,6 @@ from data.constants import (
     LOGIN_START_PART,
 )
 from helpers.account_helper import AccountHelper
-from packages.notifier.bot import send_file
 from packages.restclient.configuration import Configuration as DmApiConfiguration
 from packages.restclient.configuration import Configuration as MailhogConfiguration
 from services.api_mailhog import MailHog
@@ -38,7 +37,6 @@ options = (
 )
 
 
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_swagger_coverage():
     reporter = CoverageReporter(api_name="dm-api-account", host=v.get('service.dm_api_account'))
@@ -47,7 +45,6 @@ def setup_swagger_coverage():
     yield
     reporter.generate_report()
     reporter.cleanup_input_files()
-    send_file()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -59,7 +56,7 @@ def set_config(
     # Локально данные берутся из локального конфига
     local_config = f"{config_name}.local"
     if (config_path / f"{local_config}.yaml").is_file():
-        config_name=local_config
+        config_name = local_config
     v.set_config_name(config_name)
     v.add_config_path(config_path)
     v.read_in_config()

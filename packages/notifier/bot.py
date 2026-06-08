@@ -15,7 +15,8 @@ v.read_in_config()
 
 
 def send_file() -> None:
-    telegram_bot = TeleBot(v.get("telegram.bot_token"))
+    token = os.getenv("TELEGRAM_BOT_ACCESS_TOKEN") or v.get("telegram.bot_token")
+    telegram_bot = TeleBot(token=token)
     file_path = Path(__file__).resolve().parents[2].joinpath('swagger-coverage-report-dm-api-account.html')
     with open(file_path, 'rb') as document:
         chat_id = os.getenv("TELEGRAM_BOT_CHAT_ID") or v.get("telegram.chat_id")
