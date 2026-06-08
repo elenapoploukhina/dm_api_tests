@@ -13,7 +13,7 @@ from pydantic import (
     ConfigDict,
 )
 
-from dm_api_account.models.user_envelope import (
+from clients.http.dm_api_account.models.user_envelope import (
     UserRole,
     Rating,
 )

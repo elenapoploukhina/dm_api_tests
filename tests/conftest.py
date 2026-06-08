@@ -1,4 +1,5 @@
 import datetime
+import os
 from collections import namedtuple
 from pathlib import Path
 
@@ -11,8 +12,9 @@ from data.constants import (
     LOGIN_START_PART,
 )
 from helpers.account_helper import AccountHelper
-from restclient.configuration import Configuration as DmApiConfiguration
-from restclient.configuration import Configuration as MailhogConfiguration
+from packages.notifier.bot import send_file
+from packages.restclient.configuration import Configuration as DmApiConfiguration
+from packages.restclient.configuration import Configuration as MailhogConfiguration
 from services.api_mailhog import MailHog
 from services.dm_api_account import DMApiAccount
 
@@ -30,8 +32,11 @@ options = (
     'service.dm_api_account',
     'service.mailhog',
     'user.login',
-    'user.password'
+    'user.password',
+    'telegram.chat_id',
+    'telegram.bot_token'
 )
+
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -42,20 +47,33 @@ def setup_swagger_coverage():
     yield
     reporter.generate_report()
     reporter.cleanup_input_files()
+    send_file()
 
 
 @pytest.fixture(scope="session", autouse=True)
 def set_config(
         request
 ):
-    config_path = Path(__file__).joinpath("../../").joinpath("config")
-    print(config_path.resolve())
+    config_path = Path(__file__).resolve().parents[1].joinpath("config")
     config_name = request.config.getoption("--env")
+    # Локально данные берутся из локального конфига
+    local_config = f"{config_name}.local"
+    if (config_path / f"{local_config}.yaml").is_file():
+        config_name=local_config
     v.set_config_name(config_name)
     v.add_config_path(config_path)
     v.read_in_config()
+
     for option in options:
         v.set(f"{option}", request.config.getoption(f"--{option}"))
+
+    if not os.getenv("TELEGRAM_BOT_CHAT_ID"):
+        os.environ["TELEGRAM_BOT_CHAT_ID"] = v.get("telegram.chat_id")
+    if not os.getenv("TELEGRAM_BOT_ACCESS_TOKEN"):
+        os.environ["TELEGRAM_BOT_ACCESS_TOKEN"] = v.get("telegram.bot_token")
+
+    request.config.stash['telegram-notifier-addfields']['environment'] = config_name
+    request.config.stash['telegram-notifier-addfields']['report'] = "https://elenapoploukhina.github.io/dm_api_tests"
 
 
 def pytest_addoption(

@@ -11,12 +11,26 @@ jobs:
   test:
     name: Python tests
     runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_CHAT_ID: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_BOT_ACCESS_TOKEN: ${{ secrets.TELEGRAM_CHAT_ID }}
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -25,8 +39,14 @@ jobs:
 
       - name: Run tests
         run: |
+          export JAVA_HOME=$JAVA_HOME
           pytest ./tests --alluredir=allure-results --disable-warnings
         continue-on-error: true
+
+      - name: Run Coverage
+        if: ${{ always() }}
+        run: |
+          python -m packages.notifier.bot
 
       - name: Archive allure results
         uses: actions/upload-artifact@v4
