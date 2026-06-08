@@ -1,3 +1,4 @@
+import allure
 from requests import Response
 
 from dm_api_account.models.login_credentials import LoginCredentials
