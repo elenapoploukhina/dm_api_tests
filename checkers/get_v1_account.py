@@ -13,11 +13,11 @@ from hamcrest import (
 )
 
 from data.constants import LOGIN_START_PART
-from dm_api_account.models.user_details_envelope import (
+from clients.http.dm_api_account.models.user_details_envelope import (
     UserDetailsEnvelope,
     ColorSchema,
 )
-from dm_api_account.models.user_envelope import UserRole
+from clients.http.dm_api_account.models.user_envelope import UserRole
 
 
 class GetV1Account:
